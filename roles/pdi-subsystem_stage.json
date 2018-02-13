@@ -1,0 +1,18 @@
+{
+  "name": "pdi-subsystem_stage",
+  "description": "test yinst rollout",
+  "json_class": "Chef::Role",
+  "default_attributes": {
+  },
+  "override_attributes": {
+  },
+  "chef_type": "role",
+  "run_list": [
+    "recipe[pdi-base-cookbook::jre]",
+    "recipe[pdi-base-cookbook::postgres]",
+    "recipe[pdi-yinst-cookbook-2::env_subsystem_stage]",
+    "recipe[pdi-pinning-test-cookbook::touch_version]"
+  ],
+  "env_run_lists": {
+  }
+}

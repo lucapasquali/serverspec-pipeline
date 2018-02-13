@@ -1,0 +1,63 @@
+platform: chef_pipeline
+shared:
+    notifications:
+      email:  lucap@yahoo-inc.com
+    settings:
+      chef_server: sandbox-v2.chef.ops.yahoo.com
+      chef_org: y7_tech
+      chef_ssh_user: y7_tech_chef
+      chef_policy_repo: git@git.corp.yahoo.com:lucap/pdi-policy.git
+
+jobs:
+    component:
+      steps:
+        pin_cookbooks:
+          to_env: pdi-subsystem_stage
+      triggers: ["pdi-env-subsystem_stage"]
+    pdi-env-subsystem_stage:
+        profile: assembly
+        steps:
+            assemble_cookbooks:
+                 to_env: pdi-subsystem_stage
+            deploy:
+                 to_env: pdi-subsystem_stage
+                 concurrency: 1
+                 search_query: 'role:pdi-subsystem_stage'
+            post_deploy:
+                 description: trying to run post deploy
+                 command: rake --rakefile=${SOURCE_DIR}/Rakefile post_deploy CHEF_ENV=pdi-subsystem_stage CHEF_QUERY=pdi-subsystem_stage
+            pin_cookbooks:
+                 to_env: pdi-subsystem_stage
+    run-prod:
+      profile: pull-request
+      triggers: ["pdi-env-prod_loc-aue","pdi-env-prod_loc-sg3"]
+    pdi-env-prod_loc-aue:
+        profile: certify
+        steps:
+            pull_cookbooks:
+                from_env: pdi-subsystem_stage
+                to_env: pdi-env-prod
+            deploy:
+                to_env: pdi-env-prod
+                concurrency: 1
+                search_query: "role:pdi-env-prod_loc-aue"
+            post_deploy:
+                description: trying to run post deploy
+                command: rake --rakefile=${SOURCE_DIR}/Rakefile post_deploy CHEF_ENV=pdi-env-prod CHEF_QUERY="pdi-env-prod_loc-aue"
+            certify_cookbooks:
+                 to_env: pdi-env-prod
+    pdi-env-prod_loc-sg3:
+        profile: certify
+        steps:
+            pull_cookbooks:
+                from_env: pdi-subsystem_stage
+                to_env: pdi-env-prod
+            deploy:
+                to_env: pdi-env-prod
+                concurrency: 1
+                search_query: "role:pdi-env-prod_loc-sg3"
+            post_deploy:
+                description: trying to run post deploy
+                command: rake --rakefile=${SOURCE_DIR}/Rakefile post_deploy CHEF_ENV=pdi-env-prod CHEF_QUERY="pdi-env-prod_loc-sg3"
+            certify_cookbooks:
+                 to_env: pdi-env-prod
